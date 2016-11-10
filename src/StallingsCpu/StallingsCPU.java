@@ -1,3 +1,6 @@
+package StallingsCpu;
+
+import StallingsCpu.OpcodeStateMachines.BaseOpcode;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -64,11 +67,37 @@ public class StallingsCPU {
 	// IOAR
 	// IOBR
 
+        public int step_rn;
+        public int step_rm;
+        public int step_bufn;
+        public int step_bufm;
+        
+        private BaseOpcode[] opcodeStateMachines;
+        
 	/*
 	 * Initializes memory and the cpu
 	 */
 	public StallingsCPU(){
 		MEM = new int[MAX_MEM];
+                
+                // initialize opcode statemachines LookupTable
+                opcodeStateMachines = new BaseOpcode[Opcode.values().length];
+                opcodeStateMachines[0] = new StallingsCpu.OpcodeStateMachines.STOP(this);
+                opcodeStateMachines[1] = new StallingsCpu.OpcodeStateMachines.LOAD(this);
+                opcodeStateMachines[2] = new StallingsCpu.OpcodeStateMachines.STORE(this);
+                opcodeStateMachines[3] = new StallingsCpu.OpcodeStateMachines.ADD(this);
+                opcodeStateMachines[4] = new StallingsCpu.OpcodeStateMachines.SUB(this);
+                opcodeStateMachines[5] = new StallingsCpu.OpcodeStateMachines.GOTO(this);
+                opcodeStateMachines[6] = new StallingsCpu.OpcodeStateMachines.IFZER(this);
+                opcodeStateMachines[7] = new StallingsCpu.OpcodeStateMachines.IFNEG(this);
+                opcodeStateMachines[8] = new StallingsCpu.OpcodeStateMachines.LOADIN(this);
+                opcodeStateMachines[9] = new StallingsCpu.OpcodeStateMachines.STOREIN(this);
+                opcodeStateMachines[10] = new StallingsCpu.OpcodeStateMachines.ADDIN(this);
+                opcodeStateMachines[11] = new StallingsCpu.OpcodeStateMachines.SUBIN(this);
+                opcodeStateMachines[12] = new StallingsCpu.OpcodeStateMachines.LOADIM(this);
+                opcodeStateMachines[13] = new StallingsCpu.OpcodeStateMachines.STOREIM(this);
+                opcodeStateMachines[14] = new StallingsCpu.OpcodeStateMachines.ADDIM(this);
+                opcodeStateMachines[15] = new StallingsCpu.OpcodeStateMachines.SUBIM(this);
 	}
 
 	/*
@@ -92,9 +121,11 @@ public class StallingsCPU {
 
 		switch(state){
 		case FETCH:
+                        stateMax = 3;
 			step_fetch();
 			break;
 		case DECODE:
+                        stateMax = 1;
 			step_decode();
 			break;
 		case EXECUTE:
@@ -108,7 +139,46 @@ public class StallingsCPU {
 				state = CycleState.FETCH;
 		}
 	}
+        
+	/*
+	 * Fetch Stepped
+	 */
+	public void step_fetch(){
+		//fetch
+		switch(stateCounter){
+		case 0:
+			MAR(PC());
+			break;
+		case 1:
+			MBR(READ(MAR()));
+			break;
+		case 2:
+			IR(MBR());
+			PC(PC()+1);
+			break;
+		}
+	}
+        
+        /*
+	 * Decode Stepped
+	 */
+	public void step_decode(){
+		CU(decode(IR()));
+                step_rn = (IR()&0xC00)>>10;
+                step_bufn = step_rn==0?A():step_rn==1?B():step_rn==2?C():D();
+                step_rm = (IR()&0x300)>>8;
+                step_bufm = step_rm==0?A():step_rm==1?B():step_rm==2?C():D();
+	}
 
+	/*
+	 * Execute Stepped
+	 * TODO: FINISH
+	 */
+	public void step_execute(int control) {
+            opcodeStateMachines[control].step(stateCounter);
+            stateMax = opcodeStateMachines[control].stateMax;
+	}
+        
 	/*
 	 * Full Decoding
 	 */
@@ -229,7 +299,6 @@ public class StallingsCPU {
 			}
 			WRITE(MAR(),MBR());
 			break;
-
 		case ADDIM:
 			MBR(IR()&0x3FF);
 			switch(rn){
@@ -269,41 +338,6 @@ public class StallingsCPU {
 			WRITE(MAR(),MBR());
 			break;
 		}
-	}
-
-	/*
-	 * Fetch Stepped
-	 */
-	public void step_fetch(){
-		//fetch
-		switch(stateCounter){
-		case 0:
-			MAR(PC());
-			break;
-		case 1:
-			MBR(READ(MAR()));
-			break;
-		case 2:
-			IR(MBR());
-			PC(PC()+1);
-			break;
-		}
-	}
-
-	/*
-	 * Decode Stepped
-	 */
-	public void step_decode(){
-		CU(decode(IR()));
-		stateMax = 1;
-	}
-
-	/*
-	 * Execute Stepped
-	 * TODO: FINISH
-	 */
-	public void step_execute(int control) {
-
 	}
 
 	public int A() {

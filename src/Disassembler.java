@@ -1,3 +1,5 @@
+import StallingsCpu.Register;
+import StallingsCpu.Opcode;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;

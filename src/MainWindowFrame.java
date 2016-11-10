@@ -1,3 +1,4 @@
+import StallingsCpu.StallingsCPU;
 import java.awt.EventQueue;
 
 import javax.swing.JFrame;

@@ -1,3 +1,5 @@
+package StallingsCpu;
+
 public enum Opcode {
 	STOP, LOAD, STORE, ADD,
 	SUB, GOTO, IFZER, IFNEG,
