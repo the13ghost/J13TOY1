@@ -212,6 +212,15 @@ public class MainWindowFrame extends JFrame {
 		JButton btnNewButton_3 = new JButton("Reset");
 		btnNewButton_3.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+                            cpu.reset();
+                            populateEditable();
+                            populateTableData();
+                            int row = cpu.PC();
+			
+                            table.clearSelection();
+                            table.setRowSelectionInterval(row, row);
+			
+                            table.repaint();
 			}
 		});
 		btnNewButton_3.setFont(smallFont);
@@ -404,10 +413,10 @@ public class MainWindowFrame extends JFrame {
 	
 	private class StepButtonListener implements ActionListener {
 		public void actionPerformed(ActionEvent arg0) {
-			status.setText("Running");
+			status.setText("Stepping");
 			
 			if(!cpu.isStopped())
-				cpu.full_cycle();
+				cpu.step_cycle();
 			
 			populateTableData();
 			

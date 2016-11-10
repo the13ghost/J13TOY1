@@ -100,6 +100,8 @@ public class StallingsCPU {
                 opcodeStateMachines[13] = new StallingsCpu.OpcodeStateMachines.STOREIM(this);
                 opcodeStateMachines[14] = new StallingsCpu.OpcodeStateMachines.ADDIM(this);
                 opcodeStateMachines[15] = new StallingsCpu.OpcodeStateMachines.SUBIM(this);
+                
+                state = CycleState.FETCH;
 	}
 
 	/*
@@ -136,9 +138,12 @@ public class StallingsCPU {
 		}
 		stateCounter++;
 		if(stateCounter==stateMax){
-			state = CycleState.values()[state.ordinal()+1];
-			if(state == null)
-				state = CycleState.FETCH;
+                        try {
+                            state = CycleState.values()[state.ordinal()+1];
+                        } catch(ArrayIndexOutOfBoundsException e){
+                            state = CycleState.FETCH;
+                        }	
+                        stateCounter = 0;
 		}
 	}
         
@@ -435,7 +440,7 @@ public class StallingsCPU {
 		out.append(String.format("CU:0x%04x,", CU()));
 		return out.toString();
 	}
-	private void reset() {
+	public void reset() {
 		MEM = new int[MAX_MEM];
 		A(0);
 		B(0);

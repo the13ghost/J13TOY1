@@ -1,6 +1,7 @@
 LOAD R2, B
 ADD R2, C
 STORE R2, A
+STOP
 
 A: 0000h
 B: 1000h
