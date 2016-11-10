@@ -1,0 +1,7 @@
+LOAD R2, B
+ADD R2, C
+STORE R2, A
+
+A: 0000h
+B: 1000h
+C: 2010h
