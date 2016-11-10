@@ -10,9 +10,21 @@ import java.io.IOException;
 public class StallingsCPU {
 	private boolean running;
 
+        // CYCLE STATE
+	private CycleState state;
+        
+        // STATE COUNTERS
 	private int stateCounter;
 	private int stateMax;
 
+        // MID STEP STATE
+        public int step_rn;
+        public int step_rm;
+        public int step_bufn;
+        public int step_bufm;
+        
+        private final BaseOpcode[] opcodeStateMachines;
+        
 	/*
 	 * Test the CPU
 	 */
@@ -60,19 +72,9 @@ public class StallingsCPU {
 	public static final int MAX_MEM = 1024;
 	private int[] MEM;
 
-	// CYCLE STATE
-	private CycleState state;
-
 	// DONT KNOW YET
 	// IOAR
 	// IOBR
-
-        public int step_rn;
-        public int step_rm;
-        public int step_bufn;
-        public int step_bufm;
-        
-        private BaseOpcode[] opcodeStateMachines;
         
 	/*
 	 * Initializes memory and the cpu
@@ -419,17 +421,18 @@ public class StallingsCPU {
 		}
 		return out;
 	}
+        @Override
 	public String toString(){
 		StringBuilder out = new StringBuilder();
-		out.append("A:"+String.format("0x%04x", A())+",");
-		out.append("B:"+String.format("0x%04x", B())+",");
-		out.append("C:"+String.format("0x%04x", C())+",");
-		out.append("D:"+String.format("0x%04x", D())+",");
-		out.append("PC:"+String.format("0x%04x", PC())+",");
-		out.append("IR:"+String.format("0x%04x", IR())+",");
-		out.append("MBR:"+String.format("0x%04x", MBR())+",");
-		out.append("MAR:"+String.format("0x%04x", MAR())+",");
-		out.append("CU:"+String.format("0x%04x", CU()));
+		out.append(String.format("A:0x%04x,", A()));
+		out.append(String.format("B:0x%04x,", B()));
+		out.append(String.format("C:0x%04x,", C()));
+		out.append(String.format("D:0x%04x,", D()));
+		out.append(String.format("PC:0x%04x,", PC()));
+		out.append(String.format("IR:0x%04x,", IR()));
+		out.append(String.format("MBR:0x%04x,", MBR()));
+		out.append(String.format("MAR:0x%04x,", MAR()));
+		out.append(String.format("CU:0x%04x,", CU()));
 		return out.toString();
 	}
 	private void reset() {
