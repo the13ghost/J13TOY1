@@ -1,3 +1,5 @@
+package Assembler;
+
 import StallingsCpu.Register;
 import StallingsCpu.Opcode;
 import java.util.EnumSet;

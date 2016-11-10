@@ -1,3 +1,6 @@
+import Assembler.Disassembler;
+import Assembler.CompilationError;
+import Assembler.Assembler;
 import StallingsCpu.StallingsCPU;
 import java.awt.EventQueue;
 

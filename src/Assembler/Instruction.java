@@ -1,3 +1,5 @@
+package Assembler;
+
 
 public class Instruction {
 	public boolean labeled;
