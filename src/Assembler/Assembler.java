@@ -1,6 +1,5 @@
 package Assembler;
 
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -8,6 +7,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Assembler {
 
@@ -67,8 +68,9 @@ public class Assembler {
         labels = new HashMap<String, Integer>();
         reqLabels = new HashMap<Integer, String>();
         machineCode = new ArrayList<Integer>();
+        lineCount = 0;
     }
-    
+
     public int[] assemble(File f) throws CompilationError {
         reset();
         BufferedReader br = null;
@@ -103,24 +105,25 @@ public class Assembler {
             }
 
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new CompilationError("Could not read file");
         } finally {
-            if (null != br)
-                try { 
+            if (null != br) {
+                try {
                     br.close();
-                } catch(IOException e) {
-                    e.printStackTrace();
+                } catch (IOException e) {
+                    throw new CompilationError("Could not close file");
                 }
+            }
         }
-        
+
         int[] out = new int[machineCode.size()];
         for (int i = 0; i < out.length; i++) {
             out[i] = machineCode.get(i);
         }
-        
+
         return out;
     }
-    
+
     public String[] tokenizeLine(String line) {
         int commentIndex = line.indexOf(';');
         int tokenCount = 0;
@@ -144,18 +147,18 @@ public class Assembler {
         System.arraycopy(tokens, 0, out, 0, tokenCount);
         return out;
     }
-    
+
     public void handleLine(String[] tokens) throws CompilationError {
         if (tokens[0].matches(labelRegEx)) {
             // throw when label exists
             if (!labels.containsKey(tokens[0])) {
                 // add new label
                 labels.put(tokens[0], machineCode.size());
-                
+
                 // build new token list without label
                 String[] t = new String[tokens.length - 1];
                 System.arraycopy(tokens, 1, t, 0, t.length);
-                
+
                 handleOpcode(t);
             } else {
                 throw new CompilationError("Label already Defined: " + lineCount + " " + tokens[0]);
@@ -164,7 +167,7 @@ public class Assembler {
             handleOpcode(tokens);
         }
     }
-        
+
     private void handleOpcode(String[] t) throws CompilationError {
         int op;
 
@@ -207,9 +210,9 @@ public class Assembler {
         } else if (t[0].equals(opcodesTable[SUB])) {
             handleOther(SUB, t);
         } else if (isData(t[0])) {
-            if (t.length != 1)
+            if (t.length != 1) {
                 throw new CompilationError("Too many data values on line " + lineCount);
-            else {
+            } else {
                 op = handleNumber(t[0]);
                 machineCode.add(new Integer(op));
             }
@@ -235,8 +238,37 @@ public class Assembler {
                 break;
         }
 
-        if (t.length != 3) {
+        if (t.length != 3 && t.length != 2) {
             throw new CompilationError("Incorrect Number of Operands for Opcode " + opcodesTable[originalOp] + " on line " + lineCount);
+        } else if (t.length == 2) {
+            op |= handleReg("R0") << 10;
+
+            int value;
+            if (isAddressOp(t[1])) {
+                value = handleDirect(t[1]);
+                if (value >= 0x400) {
+                    throw new CompilationError("Address number too high " + t[1] + " on line " + lineCount);
+                }
+
+                machineCode.add(new Integer(op | value));
+
+            } else if (isLabel(t[1])) {
+                reqLabels.put(machineCode.size(), t[1]);
+                machineCode.add(new Integer(op));
+
+            } else if (isImmediate(t[1])) {
+                value = handleImmediate(t[1]);
+                if (value >= 400) {
+                    throw new CompilationError("Immediate Value is too high " + t[2] + " on line " + lineCount);
+                } else {
+                    op |= value;
+                    op &= 0xfff;
+                    op |= handleOp(originalOp, IMMEDIATE) << 12;
+                    machineCode.add(new Integer(op));
+                }
+            } else {
+                throw new CompilationError("Operand not Valid for Opcode " + opcodesTable[originalOp] + " on line " + lineCount);
+            }
         } else {
             if (isRegister(t[1])) {
                 op |= handleReg(t[1]) << 10;
@@ -257,7 +289,7 @@ public class Assembler {
             } else if (isRegisterOp(t[2])) {
                 op |= handleRegOp(t[2]) << 8;
                 op &= 0xfff;
-                op |= handleOp(LOAD, INDIRECT) << 12;
+                op |= handleOp(originalOp, INDIRECT) << 12;
                 machineCode.add(new Integer(op));
             } else if (isImmediate(t[2])) {
                 value = handleImmediate(t[2]);
@@ -266,7 +298,7 @@ public class Assembler {
                 } else {
                     op |= value;
                     op &= 0xfff;
-                    op |= handleOp(LOAD, IMMEDIATE) << 12;
+                    op |= handleOp(originalOp, IMMEDIATE) << 12;
                     machineCode.add(new Integer(op));
                 }
             } else {
@@ -325,8 +357,22 @@ public class Assembler {
 
     private void handleIf(String[] t, int op) throws CompilationError {
         op <<= 12;
-        if (t.length != 3) {
+        if (t.length != 3 && t.length != 2) {
             throw new CompilationError("Incorrect number of operands for opcode" + " on line " + lineCount);
+        } else if (t.length == 2) {
+            op |= handleReg("R0") << 10;
+            if (isAddress(t[1])) {
+                if (Integer.parseInt(t[1].substring(0, t[1].length() - 1), 16) < 0x400) {
+                    machineCode.add(new Integer(op | Integer.parseInt(t[1].substring(0, t[1].length() - 1), 16)));
+                } else {
+                    throw new CompilationError("Address Value Too High" + " on line " + lineCount);
+                }
+            } else if (isLabel(t[1])) {
+                reqLabels.put(machineCode.size(), t[1]);
+                machineCode.add(new Integer(op));
+            } else {
+                throw new CompilationError("Not valid second operand" + " on line " + lineCount);
+            }
         } else {
             if (isRegister(t[1])) {
                 op |= handleReg(t[1]) << 10;
@@ -382,5 +428,55 @@ public class Assembler {
 
     private boolean isAddressOp(String operand) {
         return operand.matches(addressOpRegEx);
-    }    
+    }
+
+    public int[] assembleHex(File f) throws CompilationError {
+        reset();
+        BufferedReader br = null;
+        StringBuilder machineLine = new StringBuilder();
+        try {
+            br = new BufferedReader(new FileReader(f));
+            String line;
+            while ((line = br.readLine()) != null) {
+                line = line.trim();
+                Pattern whitespace = Pattern.compile("[^a-fA-F0-9]", Pattern.MULTILINE);
+                Matcher matcher = whitespace.matcher(line);
+                String result = "";
+                if (matcher.find()) {
+                    result = matcher.replaceAll("");
+                } else {
+                    result = line;
+                }
+                machineLine.append(result);
+            }
+        } catch (IOException e) {
+            throw new CompilationError("Could not read file.");
+        } finally {
+            if (null != br) {
+                try {
+                    br.close();
+                } catch (IOException e) {
+                    throw new CompilationError("Could not close file.");
+                }
+            }
+        }
+
+        ArrayList<String> out4 = new ArrayList<>();
+        for (int start = 0; start < machineLine.toString().length(); start += 4) {
+            out4.add(machineLine.substring(start, Math.min(machineLine.length(), start + 4)));
+        }
+
+        for (String o : out4) {
+            if (o.length() < 4) {
+                throw new CompilationError("All binary data must be able to be grouped in 2 bytes");
+            }
+            machineCode.add(Integer.parseInt(o, 16));
+        }
+
+        int[] out = new int[machineCode.size()];
+        for (int i = 0; i < out.length; i++) {
+            out[i] = machineCode.get(i);
+        }
+        return out;
+    }
 }

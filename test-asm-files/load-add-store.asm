@@ -1,6 +1,7 @@
-LOAD R0, B
-ADD R0, C
-STORE R0, A
+; Implied accumulator register
+LOAD B
+ADD C
+STORE A
 STOP
 
 A: 0000h
