@@ -12,8 +12,8 @@ import java.util.regex.Pattern;
 
 public class Assembler {
 
-    private static final String[] opcodesTable = {"STOP", "LOAD", "STORE", "ADD",
-        "SUB", "GOTO", "IFZER", "IFNEG"};
+    private static final String[] opcodesTable = {"STOP", "LOAD", "STORE", "GOTO",
+        "SUB", "ADD", "IFZER", "IFNEG"};
 
     private static final String labelOpRegEx = "^[a-zA-Z]([a-zA-Z0-9]*)$";
     private static final String labelRegEx = "^[a-zA-Z]([a-zA-Z0-9]*:)|:$";
@@ -27,9 +27,9 @@ public class Assembler {
     private static final int STOP = 0;
     private static final int LOAD = 1;
     private static final int STORE = 2;
-    private static final int ADD = 3;
+    private static final int ADD = 5;
     private static final int SUB = 4;
-    private static final int GOTO = 5;
+    private static final int GOTO = 3;
     private static final int IFZER = 6;
     private static final int IFNEG = 7;
 
@@ -186,11 +186,11 @@ public class Assembler {
                 throw new CompilationError("Incorrect Number of Operands for Opcode" + " on line " + lineCount);
             } else if (isLabel(t[1])) {
                 reqLabels.put(machineCode.size(), t[1]);
-                machineCode.add(new Integer(0x5000));
+                machineCode.add(new Integer(0x3000));
             } else if (isAddress(t[1])) {
                 op = handleNumber(t[1]);
                 if (op < 0x400) {
-                    machineCode.add(new Integer(0x5000 | op));
+                    machineCode.add(new Integer(0x3000 | op));
                 } else {
                     throw new CompilationError("Address number too high" + " on line " + lineCount);
                 }
@@ -231,7 +231,7 @@ public class Assembler {
                 op = 0x2000;
                 break;
             case ADD:
-                op = 0x3000;
+                op = 0x5000;
                 break;
             case SUB:
                 op = 0x4000;

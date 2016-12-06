@@ -86,9 +86,9 @@ public class StallingsCPU {
         opcodeStateMachines[0] = new StallingsCpu.OpcodeStateMachines.STOP(this);
         opcodeStateMachines[1] = new StallingsCpu.OpcodeStateMachines.LOAD(this);
         opcodeStateMachines[2] = new StallingsCpu.OpcodeStateMachines.STORE(this);
-        opcodeStateMachines[3] = new StallingsCpu.OpcodeStateMachines.ADD(this);
+        opcodeStateMachines[5] = new StallingsCpu.OpcodeStateMachines.ADD(this);
         opcodeStateMachines[4] = new StallingsCpu.OpcodeStateMachines.SUB(this);
-        opcodeStateMachines[5] = new StallingsCpu.OpcodeStateMachines.GOTO(this);
+        opcodeStateMachines[3] = new StallingsCpu.OpcodeStateMachines.GOTO(this);
         opcodeStateMachines[6] = new StallingsCpu.OpcodeStateMachines.IFZER(this);
         opcodeStateMachines[7] = new StallingsCpu.OpcodeStateMachines.IFNEG(this);
         opcodeStateMachines[8] = new StallingsCpu.OpcodeStateMachines.LOADIN(this);
