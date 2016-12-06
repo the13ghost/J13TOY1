@@ -155,7 +155,7 @@ public class MainDebuggerWindowFrame extends javax.swing.JFrame {
         buttonsContainerLayout.setHorizontalGroup(
             buttonsContainerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, buttonsContainerLayout.createSequentialGroup()
-                .addGap(0, 16, Short.MAX_VALUE)
+                .addGap(0, 22, Short.MAX_VALUE)
                 .addGroup(buttonsContainerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(stepButton, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                     .addComponent(playButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -204,8 +204,7 @@ public class MainDebuggerWindowFrame extends javax.swing.JFrame {
                         .addGap(16, 16, 16)
                         .addComponent(stateLabel)))
                 .addGap(18, 18, 18)
-                .addComponent(buttonsContainer, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addComponent(buttonsContainer, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         controlContainerLayout.setVerticalGroup(
             controlContainerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
